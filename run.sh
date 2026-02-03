@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -e
+
+uv run python main2.py

@@ -1,7 +1,7 @@
 import requests
 import os
 from dotenv import load_dotenv
-
+from langchain.tools import tool
 load_dotenv()
 
 GITHUB_API = "https://api.github.com"
@@ -11,6 +11,7 @@ HEADERS = {
 }
 
 # Added pagination to fetch all repositories
+@tool
 def fetch_github_profile(username: str,) -> dict:
     """
     Fetch public GitHub repositories and README content.
@@ -24,8 +25,25 @@ def fetch_github_profile(username: str,) -> dict:
         repos_response = requests.get(repos_url, headers=HEADERS)
         repos_data = repos_response.json()
 
+        if repos_response.status_code == 404:
+            return {
+                "error": "user_not_found",
+                "username": username
+            }
+
+        if repos_response.status_code == 403:
+            return {
+                "error": "rate_limited",
+                "username": username
+            }
+
         if repos_response.status_code != 200:
-            raise Exception("Failed to fetch repositories")
+            return {
+                "error": "unknown_error",
+                "status_code": repos_response.status_code,
+                "username": username
+            }
+
         
         if len(repos_response.json()) == 0:
             empty = True

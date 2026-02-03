@@ -11,7 +11,7 @@ HEADERS = {
     "Accept": "application/vnd.github+json"
 }
 
-@tool
+
 def fetch_github_profile(username: str,) -> dict:
     """
     Fetch public GitHub repositories and README content.
