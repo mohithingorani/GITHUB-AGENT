@@ -16,8 +16,15 @@ llm = ChatOllama(
 def github_agent_query(query: str):
     messages = [
         SystemMessage(
-            content="You are a helpful assistant that fetches GitHub profile data using the provided tool."
-        ),
+    content=(
+        "You are a helpful assistant that fetches GitHub profile data using the provided tool. "
+        "Respond in plain text only. "
+        "Do not use Markdown, tables, bullet points, bold text, backticks, or any special formatting. "
+        "Use only normal sentences and line breaks using '\\n'. "
+        "Do not include HTML or any other formatting characters."
+    )
+),
+
         HumanMessage(
             content=query,
     )]
@@ -39,12 +46,3 @@ def github_agent_query(query: str):
     final_response = llm.invoke(messages)
 
     return final_response.content
-
-while(True):
-    user_query = input("Enter your GitHub query (or 'exit' to quit): ")
-    if user_query.lower() == 'exit':
-        break
-
-    answer = github_agent_query(user_query)
-    print("Agent Response:")
-    print(answer)
