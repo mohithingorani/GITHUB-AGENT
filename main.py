@@ -23,7 +23,7 @@ messages = [
   """
 ),
     HumanMessage(
-        content=("What language does mohithingorani use the most in their public GitHub repositories?", ),
+        content="What language does mohithingorani use the most in their public GitHub repositories?",
 )]
 
 response = llm.invoke(messages)
@@ -41,6 +41,4 @@ if isinstance(response, AIMessage):
         )
 
 final_response = llm.invoke(messages)
-print(final_response.content)
-
-
+print(final_response.content)   

@@ -38,14 +38,7 @@ def agent_response(prompt: str) -> str:
             - Emit a real tool call when needed.
             - Never invent or assume GitHub data.
 
-            Reasoning & output rules:
-            - Explain your reasoning step by step.
-            - Use statistics when available.
-            - End with a short numbered summary.
-
-            If a comparison is requested (e.g. "better than"):
-            - Fetch data for ALL entities before answering.
-            - If criteria is unclear, ask for clarification.
+            
             """
                     ),
         HumanMessage(content=prompt),

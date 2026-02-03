@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 import pprint
 from langchain.tools import tool
+
 load_dotenv()
 
 GITHUB_API = "https://api.github.com"
@@ -11,6 +12,47 @@ HEADERS = {
     "Accept": "application/vnd.github+json"
 }
 
+
+def summarize(data):
+    # Simple summary function
+    if "error" in data:
+        return f"Error fetching data for user {data['username']}: {data['error']}"
+    
+    summary = f"GitHub User: {data['username']}\n"
+    summary += f"Total Public Repositories: {data['repo_count']}\n"
+    language_count = {}
+    for repo in data['repos']:
+        lang = repo['language']
+        if lang:
+            language_count[lang] = language_count.get(lang, 0) + 1
+    
+    summary += "Languages Used:\n"
+    for lang, count in language_count.items():
+        summary += f"- {lang}: {count} repositories\n"
+    
+    return summary
+
+# summarize function with dict response
+def summarize_dict(data):
+    if "error" in data:
+        return {
+            "error": data["error"],
+            "username": data["username"]
+        }
+    
+    language_count = {}
+    for repo in data['repos']:
+        lang = repo['language']
+        if lang:
+            language_count[lang] = language_count.get(lang, 0) + 1
+    
+    summary = {
+        "username": data['username'],
+        "repo_count": data['repo_count'],
+        "languages_used": language_count
+    }
+    
+    return summary
 
 def fetch_github_profile(username: str,) -> dict:
     """
@@ -25,8 +67,25 @@ def fetch_github_profile(username: str,) -> dict:
         repos_response = requests.get(repos_url, headers=HEADERS)
         repos_data = repos_response.json()
 
+        if repos_response.status_code == 404:
+            return {
+                "error": "user_not_found",
+                "username": username
+            }
+
+        if repos_response.status_code == 403:
+            return {
+                "error": "rate_limited",
+                "username": username
+            }
+
         if repos_response.status_code != 200:
-            raise Exception("Failed to fetch repositories")
+            return {
+                "error": "unknown_error",
+                "status_code": repos_response.status_code,
+                "username": username
+            }
+
         
         if len(repos_response.json()) == 0:
             empty = True
@@ -43,14 +102,16 @@ def fetch_github_profile(username: str,) -> dict:
             })
         page += 1
 
-    return {
+    data = {
         "username": username,
         "repo_count": len(cleaned_repos),
         "repos": cleaned_repos
     }
+    summary = summarize_dict(data)
+    return summary
 
 
-# data = fetch_github_profile("mohithingorani")
-
+data = fetch_github_profile("mohithingorani")
+print(data)
 # # Pretty print the fetched data
 # pprint.pprint(data)
