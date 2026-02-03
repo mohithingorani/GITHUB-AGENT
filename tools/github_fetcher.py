@@ -87,7 +87,6 @@ def fetch_github_profile(username: str,) -> dict:
                 "username": username
             }
 
-        
         if len(repos_response.json()) == 0:
             empty = True
             break

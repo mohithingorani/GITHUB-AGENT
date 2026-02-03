@@ -1,50 +1,64 @@
-from langchain_ollama import ChatOllama
-from tools.github_fetcher import fetch_github_profile
-from langchain.messages import (
-    SystemMessage,
-    HumanMessage,
-    AIMessage,
-    ToolMessage
+from flask import Flask, request, jsonify
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    jwt_required,
+    get_jwt_identity
 )
+from config import Config
+from models import db, User, Chat
 
-llm = ChatOllama(
-    model="gpt-oss:20b",
-    temperature=0
-).bind_tools([fetch_github_profile])
+app = Flask(__name__)
+app.config.from_object(Config)
+
+db.init_app(app)
+
+jwt = JWTManager(app)
+
+with app.app_context():
+    db.create_all()
 
 
-def github_agent_query(query: str):
-    messages = [
-        SystemMessage(
-            content="You are a helpful assistant that fetches GitHub profile data using the provided tool."
-        ),
-        HumanMessage(
-            content=query,
-    )]
+@app.route("/signup",methods=["POST"])
+def signup():
+    data = request.get_json()
+    email = data.get("email")
+    password = data.get("password")
 
-    response = llm.invoke(messages)
-    messages.append(response)
+    if not email or not password:
+        return jsonify({"Error":"Email and Password Required"}), 400
+    
+    if User.query.filter_by(email=email).first():
+        return jsonify({"Error":"User already exists"}), 409
+    
+    user = User(email=email)
+    user.set_password(password)
 
-    if isinstance(response, AIMessage):
-        for call in response.tool_calls:
-            tool_output = fetch_github_profile.invoke(call["args"])
+    db.session.add(user)
+    db.session.commit()
 
-            messages.append(
-                ToolMessage(
-                    content=str(tool_output),
-                    tool_call_id=call["id"]
-                )
-            )
+    return jsonify({"message":"User created successfully"}), 201
 
-    final_response = llm.invoke(messages)
 
-    return final_response.content
 
-while(True):
-    user_query = input("Enter your GitHub query (or 'exit' to quit): ")
-    if user_query.lower() == 'exit':
-        break
+@app.route("/signin",methods=["POST"])
+def signin():
+    data = request.get_json()
+    email = data.get("email")
+    password = data.get("password")
 
-    answer = github_agent_query(user_query)
-    print("Agent Response:")
-    print(answer)
+    if not email or not password:
+        return jsonify({"error":"Email and Password Required"}),400
+    
+    user = User.query.filter(email=email).first()
+
+    if not user or not user.check_password():
+        return jsonify({"error":"Invalid Credentials"}),401
+    
+    token = create_access_token(identity=user.id)
+
+    return jsonify({
+        "access_token" :token
+    }),200
+
+
