@@ -6,12 +6,15 @@ from langchain.messages import (
     AIMessage,
     ToolMessage
 )
-
+from langsmith import traceable
+from dotenv import load_dotenv
+load_dotenv()
 llm = ChatOllama(
     model="gpt-oss:20b",
     temperature=0
 ).bind_tools([fetch_github_profile])
 
+@traceable(name="github_agent_query", tags=["agent", "github"])
 
 def github_agent_query(query: str):
     messages = [
@@ -30,9 +33,10 @@ def github_agent_query(query: str):
     )]
 
     response = llm.invoke(messages)
+    print("Tool calls:", response.tool_calls)
     messages.append(response)
 
-    if isinstance(response, AIMessage):
+    if isinstance(response, AIMessage) and response.tool_calls:
         for call in response.tool_calls:
             tool_output = fetch_github_profile.invoke(call["args"])
 

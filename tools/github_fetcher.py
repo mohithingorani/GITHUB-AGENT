@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 import pprint
 from langchain.tools import tool
-
+from langsmith import traceable
 load_dotenv()
 
 GITHUB_API = "https://api.github.com"
