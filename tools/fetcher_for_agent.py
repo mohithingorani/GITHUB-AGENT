@@ -1,8 +1,7 @@
 import requests
 import os
 from dotenv import load_dotenv
-import pprint
-from langchain.tools import tool
+
 load_dotenv()
 
 GITHUB_API = "https://api.github.com"
@@ -11,7 +10,7 @@ HEADERS = {
     "Accept": "application/vnd.github+json"
 }
 
-@tool
+# Added pagination to fetch all repositories
 def fetch_github_profile(username: str,) -> dict:
     """
     Fetch public GitHub repositories and README content.
