@@ -66,7 +66,8 @@ def fetch_github_profile(username: str,) -> dict:
         repos_url = f"{GITHUB_API}/users/{username}/repos?per_page=100&page={page}"
         repos_response = requests.get(repos_url, headers=HEADERS)
         repos_data = repos_response.json()
-
+        print("Fetching page:", page)
+        print("Respose data:", repos_data)
         if repos_response.status_code == 404:
             return {
                 "error": "user_not_found",
@@ -91,9 +92,12 @@ def fetch_github_profile(username: str,) -> dict:
             empty = True
             break
         for repo in repos_data:
+            if repo["fork"]:
+                continue
             cleaned_repos.append({
                 "name": repo["name"],
                 "language": repo["language"],
+                "stars": repo["stargazers_count"],
             })
         page += 1
 

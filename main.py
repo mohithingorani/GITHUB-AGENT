@@ -8,7 +8,7 @@ from langchain.messages import (
 )
 
 llm = ChatOllama(
-    model="llama3.1:8b",
+    model="gpt-oss:20b",
     temperature=0
 ).bind_tools([fetch_github_profile])
 
